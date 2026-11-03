@@ -7,12 +7,11 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates
 
-# Cache dependencies
-COPY go.mod go.sum* ./
-RUN go mod download
-
 # Copy source code
 COPY . .
+
+# Tidy dependencies to generate full checksums
+RUN go mod tidy
 
 # Build statically linked binaries with debug symbols stripped
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /bin/api ./cmd/api
