@@ -370,23 +370,6 @@ make up
 
 ---
 
-## 📄 Resume Impact Snippet (For Google SDE)
-
-```text
-URLForge — Scalable Distributed URL Shortener Engine                    [GitHub] [Live Demo]
-Go · PostgreSQL · Redis · Apache Kafka · Docker · Kubernetes · Prometheus · Nginx
-
-• Architected a distributed URL shortening platform in Go capable of 12,000+ RPS across 3 API pods
-  via Nginx load balancing, sustaining sub-10ms P99 redirection latency with a 96.8% cache hit ratio.
-• Implemented collision-free distributed ID generation using a modified 64-bit Twitter Snowflake
-  algorithm and Base62 bijective encoding, achieving 4M+ unique IDs/sec without centralized database locks.
-• Prevented cache penetration by implementing an in-memory Kirsch-Mitzenmacher double-hashed Bloom Filter
-  calibrated for 1M keys at 0.5% FPR, rejecting non-existent lookups in O(1) time without DB/cache hits.
-• Engineered an asynchronous click telemetry streaming pipeline using Apache Kafka, decoupling batch analytics
-  ingestion into TimescaleDB from the critical redirection path with zero user-perceived latency penalty.
-• Built distributed token-bucket rate limiter via atomic Redis Lua scripts with automatic in-memory fallback,
-  and instrumented Prometheus metrics tracking Google SRE's Four Golden Signals.
-```
 
 ---
 
