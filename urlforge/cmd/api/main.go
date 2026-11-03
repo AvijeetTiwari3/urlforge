@@ -167,9 +167,10 @@ func main() {
 	// Catch-all Redirect Route
 	router.GET("/:shortCode", redirectH.Redirect)
 
-	// 12. Graceful HTTP Server Execution
+	// 12. Graceful HTTP Server Execution (Explicitly bind to IPv4 0.0.0.0 for Docker & Cloud Load Balancers)
+	primaryAddr := "0.0.0.0:" + cfg.Port
 	srv := &http.Server{
-		Addr:         ":" + cfg.Port,
+		Addr:         primaryAddr,
 		Handler:      router,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -177,23 +178,23 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("[main] server listening on primary port %s", cfg.Port)
+		log.Printf("[main] server listening on primary IPv4 %s", primaryAddr)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("[main] HTTP server failure: %v", err)
 		}
 	}()
 
-	// Also listen on port 10000 for Render's default reverse proxy routing
+	// Also listen on IPv4 port 10000 for Render's default reverse proxy routing
 	if cfg.Port != "10000" {
 		srv10k := &http.Server{
-			Addr:         ":10000",
+			Addr:         "0.0.0.0:10000",
 			Handler:      router,
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 			IdleTimeout:  120 * time.Second,
 		}
 		go func() {
-			log.Println("[main] server also listening on fallback port 10000 for Render routing")
+			log.Println("[main] server also listening on fallback IPv4 0.0.0.0:10000")
 			_ = srv10k.ListenAndServe()
 		}()
 	}
