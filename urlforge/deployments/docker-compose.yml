@@ -1,0 +1,160 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: urlforge-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: urlforge
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d urlforge"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: urlforge-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: urlforge-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: urlforge-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  api-1:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: urlforge-api-1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      PORT: "8080"
+      WORKER_ID: "1"
+      DATABASE_URL: "postgres://postgres:postgrespassword@postgres:5432/urlforge?sslmode=disable"
+      REDIS_URL: "redis:6379"
+      KAFKA_BROKERS: "kafka:29092"
+      ENVIRONMENT: "production"
+
+  api-2:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: urlforge-api-2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      PORT: "8080"
+      WORKER_ID: "2"
+      DATABASE_URL: "postgres://postgres:postgrespassword@postgres:5432/urlforge?sslmode=disable"
+      REDIS_URL: "redis:6379"
+      KAFKA_BROKERS: "kafka:29092"
+      ENVIRONMENT: "production"
+
+  api-3:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: urlforge-api-3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      PORT: "8080"
+      WORKER_ID: "3"
+      DATABASE_URL: "postgres://postgres:postgrespassword@postgres:5432/urlforge?sslmode=disable"
+      REDIS_URL: "redis:6379"
+      KAFKA_BROKERS: "kafka:29092"
+      ENVIRONMENT: "production"
+
+  worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: urlforge-worker
+    entrypoint: ["/usr/local/bin/worker"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      DATABASE_URL: "postgres://postgres:postgrespassword@postgres:5432/urlforge?sslmode=disable"
+      KAFKA_BROKERS: "kafka:29092"
+
+  nginx:
+    image: nginx:alpine
+    container_name: urlforge-lb
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api-1
+      - api-2
+      - api-3
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: urlforge-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: urlforge-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+volumes:
+  pgdata:
