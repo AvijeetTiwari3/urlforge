@@ -2,14 +2,14 @@
 ### *Enterprise Distributed URL Shortener & High-Throughput Telemetry Engine*
 
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go)](https://go.dev)
-[![Live Production API](https://img.shields.io/badge/Live%20Demo-Available-success?style=flat&logo=render)](https://urlforge-h6jy.onrender.com)
+[![Live Production API](https://img.shields.io/badge/Live%20Demo-Available-success?style=flat&logo=render)](https://urlforge-h6jv.onrender.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CI/CD](https://img.shields.io/badge/CI-Passing-brightgreen?logo=github-actions)](.github/workflows/ci.yml)
 [![Docker Cluster](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](deployments/docker-compose.yml)
 [![Architecture](https://img.shields.io/badge/Architecture-Distributed%20Microservices-orange)](#system-architecture)
 
-> 🌐 **Live Production Endpoint:** [https://urlforge-h6jy.onrender.com](https://urlforge-h6jy.onrender.com)  
-> 🏥 **Health Probe:** [https://urlforge-h6jy.onrender.com/health](https://urlforge-h6jy.onrender.com/health)
+> 🌐 **Live Production Endpoint:** [https://urlforge-h6jv.onrender.com](https://urlforge-h6jv.onrender.com)  
+> 🏥 **Health Probe:** [https://urlforge-h6jv.onrender.com/health](https://urlforge-h6jv.onrender.com/health)
 
 URLForge is a cloud-native, distributed URL shortening engine engineered for hyperscale workloads (**50,000+ requests/sec** with sub-10ms P99 redirection latency). Designed following Google Site Reliability Engineering (SRE) and large-scale distributed systems principles, it features **collision-free 64-bit Snowflake ID generation**, **Kirsch-Mitzenmacher double-hashed Bloom Filters**, **asynchronous Kafka telemetry ingestion**, and **atomic Redis Lua-scripted rate limiting**.
 
@@ -274,7 +274,7 @@ $ make load-test
 
 ### 1. Root System Information & Health
 ```bash
-curl -s https://urlforge-h6jy.onrender.com/ | jq
+curl -s https://urlforge-h6jv.onrender.com/ | jq
 ```
 ```json
 {
@@ -295,7 +295,7 @@ curl -s https://urlforge-h6jy.onrender.com/ | jq
 
 ### 2. Shorten URL
 ```bash
-curl -X POST https://urlforge-h6jy.onrender.com/api/v1/shorten \
+curl -X POST https://urlforge-h6jv.onrender.com/api/v1/shorten \
   -H "Content-Type: application/json" \
   -d '{
     "original_url": "https://careers.google.com/jobs/results/",
@@ -305,7 +305,7 @@ curl -X POST https://urlforge-h6jy.onrender.com/api/v1/shorten \
 ```json
 {
   "short_code": "0wXy71",
-  "short_url": "https://urlforge-h6jy.onrender.com/0wXy71",
+  "short_url": "https://urlforge-h6jv.onrender.com/0wXy71",
   "original_url": "https://careers.google.com/jobs/results/",
   "expires_at": "2026-12-03T13:00:00Z",
   "created_at": "2026-11-03T13:00:00Z"
@@ -314,7 +314,7 @@ curl -X POST https://urlforge-h6jy.onrender.com/api/v1/shorten \
 
 ### 3. Resolve & Redirect
 ```bash
-curl -i https://urlforge-h6jy.onrender.com/0wXy71
+curl -i https://urlforge-h6jv.onrender.com/0wXy71
 ```
 ```http
 HTTP/1.1 302 Found
@@ -325,7 +325,7 @@ Content-Length: 0
 
 ### 4. Aggregated Telemetry
 ```bash
-curl -s "https://urlforge-h6jy.onrender.com/api/v1/analytics/0wXy71?range=7d" | jq
+curl -s "https://urlforge-h6jv.onrender.com/api/v1/analytics/0wXy71?range=7d" | jq
 ```
 ```json
 {
