@@ -32,6 +32,6 @@ COPY migrations/ ./migrations/
 
 USER appuser
 
-EXPOSE 8080
+EXPOSE 8080 10000
 
 ENTRYPOINT ["/usr/local/bin/api"]

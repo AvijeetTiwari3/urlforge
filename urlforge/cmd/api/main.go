@@ -129,7 +129,7 @@ func main() {
 	router.Use(middleware.PrometheusMetrics())
 
 	// Root Welcome & Health Endpoint for Cloud Load Balancers & Recruiters
-	router.GET("/", func(c *gin.Context) {
+	welcomeHandler := func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"service":      "URLForge Distributed URL Shortener Engine",
 			"status":       "HEALTHY",
@@ -144,11 +144,16 @@ func main() {
 				"metrics":   "GET /metrics",
 			},
 		})
-	})
+	}
+
+	router.GET("/", welcomeHandler)
+	router.HEAD("/", welcomeHandler)
 
 	// Health & Metrics
 	router.GET("/health", healthH.Liveness)
+	router.HEAD("/health", healthH.Liveness)
 	router.GET("/ready", healthH.Readiness)
+	router.HEAD("/ready", healthH.Readiness)
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// API Group with Rate Limiting
@@ -172,11 +177,26 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("[main] server listening on port %s", cfg.Port)
+		log.Printf("[main] server listening on primary port %s", cfg.Port)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("[main] HTTP server failure: %v", err)
 		}
 	}()
+
+	// Also listen on port 10000 for Render's default reverse proxy routing
+	if cfg.Port != "10000" {
+		srv10k := &http.Server{
+			Addr:         ":10000",
+			Handler:      router,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  120 * time.Second,
+		}
+		go func() {
+			log.Println("[main] server also listening on fallback port 10000 for Render routing")
+			_ = srv10k.ListenAndServe()
+		}()
+	}
 
 	// Wait for OS shutdown signal
 	quit := make(chan os.Signal, 1)
