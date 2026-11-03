@@ -43,6 +43,13 @@ func main() {
 	}
 	defer primaryDB.Close()
 
+	// Auto-run schema migrations to ensure tables exist
+	if err := runMigrations(primaryDB); err != nil {
+		log.Printf("[main] warning: database migration check: %v", err)
+	} else {
+		log.Println("[main] database schema migrations verified successfully")
+	}
+
 	// Connect to Read Replica (if configured differently)
 	var replicaDB *sql.DB
 	if cfg.ReadReplicaURL != "" && cfg.ReadReplicaURL != cfg.DatabaseURL {
@@ -167,4 +174,35 @@ func main() {
 	}
 
 	log.Println("[main] server exited successfully")
+}
+
+func runMigrations(db *sql.DB) error {
+	schema := `
+	CREATE TABLE IF NOT EXISTS urls (
+		id            BIGINT PRIMARY KEY,
+		short_code    VARCHAR(50) NOT NULL UNIQUE,
+		original_url  TEXT NOT NULL,
+		user_id       VARCHAR(64),
+		custom_alias  VARCHAR(50) UNIQUE,
+		expires_at    TIMESTAMPTZ,
+		is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+		created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+		updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	);
+	CREATE INDEX IF NOT EXISTS idx_urls_short_code_active ON urls(short_code) WHERE is_active = TRUE;
+	CREATE INDEX IF NOT EXISTS idx_urls_expires_at ON urls(expires_at) WHERE expires_at IS NOT NULL;
+
+	CREATE TABLE IF NOT EXISTS click_events (
+		id          BIGSERIAL,
+		short_code  VARCHAR(50) NOT NULL,
+		clicked_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+		ip_hash     VARCHAR(64),
+		country     VARCHAR(10),
+		device      VARCHAR(20),
+		referrer    TEXT
+	);
+	CREATE INDEX IF NOT EXISTS idx_clicks_short_code_time ON click_events(short_code, clicked_at DESC);
+	`
+	_, err := db.Exec(schema)
+	return err
 }
