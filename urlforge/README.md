@@ -2,9 +2,13 @@
 ### *Production-Grade Distributed URL Shortener & Telemetry Engine*
 
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go)](https://go.dev)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Available-success?style=flat&logo=render)](https://urlforge-h6jy.onrender.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CI Status](https://img.shields.io/badge/CI-Passing-brightgreen?logo=github-actions)](.github/workflows/ci.yml)
 [![Docker Compose](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](deployments/docker-compose.yml)
+
+> 🌐 **Live Production API:** [https://urlforge-h6jy.onrender.com](https://urlforge-h6jy.onrender.com)  
+> 🏥 **Health Check:** [https://urlforge-h6jy.onrender.com/health](https://urlforge-h6jy.onrender.com/health)
 
 URLForge is an industry-grade, horizontally scalable URL shortening platform designed to handle **50,000+ requests/sec** with sub-10ms P99 redirection latency. Built using Google-standard engineering patterns including distributed snowflake ID generation, bloom-filter guarded caching, asynchronous event streaming with Kafka, and atomic token bucket rate limiting.
 

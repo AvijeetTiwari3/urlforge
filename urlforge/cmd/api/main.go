@@ -128,6 +128,24 @@ func main() {
 	router.Use(middleware.StructuredLogger())
 	router.Use(middleware.PrometheusMetrics())
 
+	// Root Welcome & Health Endpoint for Cloud Load Balancers & Recruiters
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"service":      "URLForge Distributed URL Shortener Engine",
+			"status":       "HEALTHY",
+			"version":      "1.0.0",
+			"architecture": "Go + PostgreSQL + Redis + Kafka + Snowflake ID Generator",
+			"endpoints": gin.H{
+				"health":    "GET /health",
+				"ready":     "GET /ready",
+				"shorten":   "POST /api/v1/shorten",
+				"redirect":  "GET /:shortCode",
+				"analytics": "GET /api/v1/analytics/:shortCode",
+				"metrics":   "GET /metrics",
+			},
+		})
+	})
+
 	// Health & Metrics
 	router.GET("/health", healthH.Liveness)
 	router.GET("/ready", healthH.Readiness)
